@@ -70,10 +70,10 @@
    * register the thubmnails plugin
    */
   videojs.plugin('thumbnails', function(options) {
-    var div, settings, img, player, progressControl, duration, moveListener, moveCancel;
+    var div, mouseDisplay, settings, img, player, progressControl, duration, moveListener, moveCancel;
     settings = extend({}, defaults, options);
     player = this;
-
+   
     (function() {
       var progressControl, addFakeActive, removeFakeActive;
       // Android doesn't support :active and :hover on non-anchor and non-button elements
@@ -126,6 +126,40 @@
     // add the thumbnail to the player
     progressControl = player.controlBar.progressControl;
     progressControl.el().appendChild(div);
+    
+     var getHoverTime = function(){
+      var mouseDisplay;
+      for(var i=0; i<progressControl.el().childNodes[0].childNodes.length; i++){
+        if(progressControl.el().childNodes[0].childNodes[i].className.indexOf("vjs-mouse-display")>-1){
+          mouseDisplay = progressControl.el().childNodes[0].childNodes[i];
+          break;
+        }
+      }
+
+      if(!mouseDisplay){
+        return null;
+      }
+
+      var currentTime = mouseDisplay.getAttribute("data-current-time").split(":");
+      var hours = 0;
+      var minutes = 0; 
+      var seconds = 0;
+
+      if(currentTime.length > 2){
+        hours   = currentTime[0];
+        minutes = currentTime[1];
+        seconds = currentTime[2];
+      }
+      else{
+        minutes = currentTime[0];
+        seconds = currentTime[1];
+      }
+
+      return (parseInt(hours)*60*60) + (parseInt(minutes)*60) + parseInt(seconds) 
+      
+    }
+   
+
 
     moveListener = function(event) {
       var mouseTime, time, active, left, setting, pageX, right, width, halfWidth, pageXOffset, clientRect;
@@ -149,7 +183,9 @@
       // `left` applies to the mouse position relative to the player so we need
       // to remove the progress control's left offset to know the mouse position
       // relative to the progress control
-      mouseTime = Math.floor((left - progressControl.el().offsetLeft) / progressControl.width() * duration);
+      //mouseTime = Math.floor((left - progressControl.el().offsetLeft) / progressControl.width() * duration);
+      mouseTime = Math.floor(getHoverTime())
+    
       for (time in settings) {
         if (mouseTime > time) {
           active = Math.max(active, time);
